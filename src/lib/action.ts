@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import connectDB from "./db";
 import { User } from "./schema";
 import { hash } from "bcryptjs";
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 
 // 로그인
 export async function login(formData: FormData) {
@@ -24,7 +24,7 @@ export async function login(formData: FormData) {
       redirect: false,
       callbackUrl: "/",
       email,
-      password
+      password,
     });
   } catch (err) {
     console.log(err);
@@ -55,7 +55,7 @@ export async function register(formData: FormData) {
   const user = new User({
     name,
     email,
-    password: hashedPassword
+    password: hashedPassword,
   });
   await user.save();
   redirect("/login");
@@ -63,4 +63,8 @@ export async function register(formData: FormData) {
 
 export async function githubLogin() {
   await signIn("github", { callbackUrl: "/" });
+}
+
+export async function logout() {
+  await signOut();
 }
