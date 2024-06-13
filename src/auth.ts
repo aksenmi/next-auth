@@ -11,7 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         console.log("credentials", credentials);
@@ -37,16 +37,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
-          id: user._id // _id 는 몽고 db 자동 생성 아이디
+          id: user._id, // _id 는 몽고 db 자동 생성 아이디
         };
 
         return null;
-      }
+      },
     }),
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET
-    })
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
   ],
   callbacks: {
     signIn: async ({ user, account }: { user: any; account: any }) => {
@@ -55,17 +55,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         //로직을 구현할거니까
         const { name, email } = user;
         await connectDB(); // mongodb 연결
-        const existingUser = await User.findOne({ authProviderId: user.id });
+        const existingUser = await User.findOne({
+          email,
+          authProviderId: "github",
+        });
         if (!existingUser) {
           //소셜 가입
           await new User({
             name,
             email,
-            authProviderId: user.id,
-            role: "user"
+            authProviderId: "github",
+            role: "user",
           }).save();
         }
-        const socialUser = await User.findOne({ authProviderId: user.id });
+        const socialUser = await User.findOne({ authProviderId: "github" });
 
         user.role = socialUser?.role || "user";
         user.id = socialUser?._id || null;
@@ -90,6 +93,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id;
       }
       return session;
-    }
-  }
+    },
+  },
 });
